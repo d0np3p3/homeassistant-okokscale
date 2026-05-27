@@ -44,6 +44,7 @@ MANUFACTURER_DATA_ID_V10 = 0x10FF  # 16-bit little endian "header" 0xff 0x10
 MANUFACTURER_DATA_ID_V11 = 0x11CA  # 16-bit little endian "header" 0xca 0x11
 MANUFACTURER_DATA_ID_V20 = 0x20CA  # 16-bit little endian "header" 0xca 0x20
 MANUFACTURER_DATA_ID_V26 = 0x26C0  # 16-bit little endian "header" 0xc0 0x26
+MANUFACTURER_DATA_ID_V66C0 = 0x66C0  # Yoda1
 MANUFACTURER_DATA_ID_VC0 = 0xC0  # 8-bit little endian "header" 0xc0
 MANUFACTURER_DATA_ID_VF0 = 0xF0FF  # 16-bit little endian "header" 0xff 0xf0
 
@@ -71,8 +72,14 @@ IDX_VC0_WEIGHT_MSB = 0
 IDX_VC0_WEIGHT_LSB = 1
 IDX_VC0_BODY_PROPERTIES = 6
 
+IDX_V66C0_WEIGHT_MSB = 0
+IDX_V66C0_WEIGHT_LSB = 1
+IDX_V66C0_TEMP = 6
+
 IDX_VF0_WEIGHT_MSB = 3
 IDX_VF0_WEIGHT_LSB = 2
+
+YODA1_MIN_WEIGHT_KG = 1.0
 
 
 class OKOKScaleBluetoothDeviceData(BluetoothData):
@@ -99,6 +106,7 @@ class OKOKScaleBluetoothDeviceData(BluetoothData):
             or MANUFACTURER_DATA_ID_V11 in service_info.manufacturer_data
             or MANUFACTURER_DATA_ID_V20 in service_info.manufacturer_data
             or MANUFACTURER_DATA_ID_V26 in service_info.manufacturer_data
+            or MANUFACTURER_DATA_ID_V66C0 in service_info.manufacturer_data
             or MANUFACTURER_DATA_ID_VF0 in service_info.manufacturer_data
             or MANUFACTURER_DATA_ID_VC0 in manufacturer_data_key_lsbs
         ):
@@ -242,6 +250,8 @@ class OKOKScaleBluetoothDeviceData(BluetoothData):
 
         if MANUFACTURER_DATA_ID_V11 in manufacturer_data:
             self._process_manufacturer_data_v11(manufacturer_data)
+        elif MANUFACTURER_DATA_ID_V66C0 in manufacturer_data:
+            self._process_manufacturer_data_v66c0(manufacturer_data)
         elif MANUFACTURER_DATA_ID_V20 in manufacturer_data:
             self._process_manufacturer_data_v20(manufacturer_data)
         elif MANUFACTURER_DATA_ID_VF0 in manufacturer_data:
@@ -396,6 +406,33 @@ class OKOKScaleBluetoothDeviceData(BluetoothData):
         )
 
         self.update_predefined_sensor(base_description, weight)
+
+    def _process_manufacturer_data_v66c0(self, manufacturer_data):
+        data = manufacturer_data[MANUFACTURER_DATA_ID_V66C0]
+        if data is None or len(data) != 7:
+            _LOGGER.error(
+                "Data length error for V66C0 (Yoda1), got %d, expected 7",
+                len(data) if data else 0,
+            )
+            return
+
+        raw_temp = data[IDX_V66C0_TEMP]
+        temperature = float((raw_temp >> 4) * 10 + (raw_temp & 0x0F))
+        _LOGGER.debug("Temperature (V66C0): %.1f °C", temperature)
+        self.update_sensor(
+            key="temperature",
+            native_unit_of_measurement=Units.TEMP_CELSIUS,
+            native_value=temperature,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            name="Temperature",
+        )
+
+        weight = ((data[IDX_V66C0_WEIGHT_MSB] << 8) | data[IDX_V66C0_WEIGHT_LSB]) / 100.0
+        if weight < YODA1_MIN_WEIGHT_KG:
+            _LOGGER.debug("Weight (V66C0): %.2f kg – not final yet, skipping", weight)
+            return
+        _LOGGER.debug("Weight (V66C0): %.2f kg – final", weight)
+        self.update_predefined_sensor(SensorLibrary.MASS__MASS_KILOGRAMS, weight)
 
     def _process_manufacturer_data_vf0(self, manufacturer_data):
         data = manufacturer_data[MANUFACTURER_DATA_ID_VF0]

@@ -22,6 +22,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfMass,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -72,6 +73,14 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         translation_key=OKOKScaleSensorDeviceClass.IMPEDANCE,
         native_unit_of_measurement="Ω",
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (OKOKScaleSensorDeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        icon="mdi:thermometer",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
 }
 
