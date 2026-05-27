@@ -44,7 +44,7 @@ MANUFACTURER_DATA_ID_V10 = 0x10FF  # 16-bit little endian "header" 0xff 0x10
 MANUFACTURER_DATA_ID_V11 = 0x11CA  # 16-bit little endian "header" 0xca 0x11
 MANUFACTURER_DATA_ID_V20 = 0x20CA  # 16-bit little endian "header" 0xca 0x20
 MANUFACTURER_DATA_ID_V26 = 0x26C0  # 16-bit little endian "header" 0xc0 0x26
-MANUFACTURER_DATA_ID_V66C0 = 0x66C0  # Yoda1
+MANUFACTURER_DATA_ID_V66C0 = 0xA5C0  # Yoda1
 MANUFACTURER_DATA_ID_VC0 = 0xC0  # 8-bit little endian "header" 0xc0
 MANUFACTURER_DATA_ID_VF0 = 0xF0FF  # 16-bit little endian "header" 0xff 0xf0
 
@@ -409,9 +409,9 @@ class OKOKScaleBluetoothDeviceData(BluetoothData):
 
     def _process_manufacturer_data_v66c0(self, manufacturer_data):
         data = manufacturer_data[MANUFACTURER_DATA_ID_V66C0]
-        if data is None or len(data) != 7:
+        if data is None or len(data) != 13:
             _LOGGER.error(
-                "Data length error for V66C0 (Yoda1), got %d, expected 7",
+                "Data length error for V66C0 (Yoda1), got %d, expected 13",
                 len(data) if data else 0,
             )
             return
