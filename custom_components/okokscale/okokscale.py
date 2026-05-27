@@ -419,13 +419,7 @@ class OKOKScaleBluetoothDeviceData(BluetoothData):
         raw_temp = data[IDX_V66C0_TEMP]
         temperature = float((raw_temp >> 4) * 10 + (raw_temp & 0x0F))
         _LOGGER.debug("Temperature (V66C0): %.1f °C", temperature)
-        self.update_sensor(
-            key="temperature",
-            native_unit_of_measurement=Units.TEMP_CELSIUS,
-            native_value=temperature,
-            device_class=SensorDeviceClass.TEMPERATURE,
-            name="Temperature",
-        )
+        self.update_predefined_sensor(SensorLibrary.TEMPERATURE__CELSIUS, temperature)
 
         weight = ((data[IDX_V66C0_WEIGHT_MSB] << 8) | data[IDX_V66C0_WEIGHT_LSB]) / 100.0
         if weight < YODA1_MIN_WEIGHT_KG:
